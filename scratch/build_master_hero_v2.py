@@ -1,0 +1,355 @@
+import os
+import math
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
+import numpy as np
+
+def generate_elite_hero_image():
+    W = 2560
+    H = 1260
+    
+    # 1. Base Dark Obsidian Canvas
+    base = Image.new('RGB', (W, H), (7, 13, 17))
+    draw = ImageDraw.Draw(base)
+
+    # Architectural room gradient: deep dark slate to rich teal-navy
+    for y in range(H):
+        t = y / H
+        r = int(6 + t * 14)
+        g = int(11 + t * 24)
+        b = int(18 + t * 32)
+        draw.line([(0, y), (W, y)], fill=(r, g, b))
+
+    # Top ceiling recessed spotlights
+    spot = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    s_draw = ImageDraw.Draw(spot)
+    for i in range(16):
+        cx = 90 + i * 160
+        s_draw.ellipse([cx - 100, -60, cx + 100, 150], fill=(52, 211, 153, 18))
+        s_draw.line([(cx, 0), (cx, 22)], fill=(134, 195, 124, 180), width=2)
+    
+    # Amphitheater floor horizon
+    floor_y = int(H * 0.72)
+    
+    # Vanishing perspective floor lines (gleaming polished showroom tile)
+    for x in range(-200, W + 200, 75):
+        vx = W // 2
+        bx = vx + int((x - vx) * 2.8)
+        s_draw.line([(x, floor_y), (bx, H)], fill=(40, 85, 90, 22), width=1)
+    
+    for fy in range(floor_y, H, 26):
+        prog = (fy - floor_y) / (H - floor_y)
+        alpha = int(12 + prog * 50)
+        s_draw.line([(0, fy), (W, fy)], fill=(52, 211, 153, alpha), width=1)
+
+    base = Image.alpha_composite(base.convert('RGBA'), spot).convert('RGB')
+    draw = ImageDraw.Draw(base)
+
+    # 2. THE GIANT PANORAMIC WALL SCREEN
+    margin_x = 60
+    screen_top = 40
+    screen_w = W - (2 * margin_x)
+    screen_h = int(H * 0.66)
+    screen_bottom = screen_top + screen_h
+
+    # Glowing aura around screen frame
+    aura = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    a_draw = ImageDraw.Draw(aura)
+    for r_offset in range(36, 0, -2):
+        alpha = int((36 - r_offset) * 3.2)
+        a_draw.rounded_rectangle(
+            [margin_x - r_offset, screen_top - r_offset, margin_x + screen_w + r_offset, screen_bottom + r_offset],
+            radius=26,
+            outline=(134, 195, 124, alpha),
+            width=2
+        )
+    base = Image.alpha_composite(base.convert('RGBA'), aura).convert('RGB')
+    draw = ImageDraw.Draw(base)
+
+    # Heavy precision bezel
+    draw.rounded_rectangle(
+        [margin_x - 8, screen_top - 8, margin_x + screen_w + 8, screen_bottom + 8],
+        radius=22,
+        fill=(12, 20, 24),
+        outline=(52, 211, 153),
+        width=3
+    )
+
+    # Screen surface interior
+    draw.rounded_rectangle(
+        [margin_x, screen_top, margin_x + screen_w, screen_bottom],
+        radius=18,
+        fill=(8, 15, 19)
+    )
+
+    # Screen subtle high-tech HUD grid
+    hud = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    h_draw = ImageDraw.Draw(hud)
+    for gx in range(margin_x, margin_x + screen_w, 32):
+        h_draw.line([(gx, screen_top), (gx, screen_bottom)], fill=(25, 55, 62, 22), width=1)
+    for gy in range(screen_top, screen_bottom, 28):
+        h_draw.line([(margin_x, gy), (margin_x + screen_w, gy)], fill=(25, 55, 62, 22), width=1)
+    
+    # Ambient glows behind course columns
+    h_draw.ellipse([margin_x + 100, screen_top + 100, margin_x + 900, screen_top + 600], fill=(56, 189, 248, 16))
+    h_draw.ellipse([margin_x + screen_w - 900, screen_top + 100, margin_x + screen_w - 100, screen_top + 600], fill=(167, 139, 250, 16))
+    h_draw.ellipse([W//2 - 400, screen_top + 100, W//2 + 400, screen_top + 600], fill=(52, 211, 153, 16))
+
+    base = Image.alpha_composite(base.convert('RGBA'), hud).convert('RGB')
+    draw = ImageDraw.Draw(base)
+
+    # Fonts
+    bold_font = 'C:/Windows/Fonts/segoeuib.ttf'
+    reg_font = 'C:/Windows/Fonts/segoeui.ttf'
+    mono_font = 'C:/Windows/Fonts/consola.ttf'
+
+    font_brand = ImageFont.truetype(bold_font, 32)
+    font_sub = ImageFont.truetype(reg_font, 15)
+    font_badge = ImageFont.truetype(bold_font, 12)
+    font_col_title = ImageFont.truetype(bold_font, 16)
+    font_course = ImageFont.truetype(reg_font, 13)
+    font_salary = ImageFont.truetype(bold_font, 11)
+
+    # Screen Top Brand Bar
+    header_bar_h = 68
+    draw.rectangle([margin_x, screen_top, margin_x + screen_w, screen_top + header_bar_h], fill=(12, 24, 29))
+    draw.line([(margin_x, screen_top + header_bar_h), (margin_x + screen_w, screen_top + header_bar_h)], fill=(52, 211, 153), width=2)
+
+    # Brand Title
+    draw.text((margin_x + 30, screen_top + 16), "GREENS TECHNOLOGYS", fill=(134, 195, 124), font=font_brand)
+    draw.text((margin_x + 410, screen_top + 26), "•  CENTRAL MASTER COURSES DIRECTORY  •  100+ PLACEMENT TRACKS", fill=(160, 205, 195), font=font_sub)
+
+    # Live HUD Stats
+    draw.text((margin_x + screen_w - 480, screen_top + 16), "● 22 CHENNAI BRANCHES  |  100% PLACEMENT ECOSYSTEM", fill=(56, 189, 248), font=font_badge)
+    draw.text((margin_x + screen_w - 480, screen_top + 38), "AVG SALARY PACKAGE: ₹8.5 - 24.0 LPA  |  LIVE ADMISSIONS OPEN", fill=(250, 204, 21), font=font_badge)
+
+    # 6 Rich Columns listing all 18 domains & courses
+    categories = [
+        {
+            "title": "PROGRAMMING & FULL STACK",
+            "accent": (56, 189, 248),
+            "salary": "₹6.5 - 18 LPA",
+            "courses": [
+                "Full Stack Developer (100% Placement)",
+                "Java Full Stack (Spring Boot + React)",
+                "Python Full Stack (Django + FastAPI)",
+                ".NET Core Full Stack & C# Microservices",
+                "Core Java 21, J2EE & Spring AI",
+                "Python Programming & Automation",
+                "C & C++ High-Performance Systems",
+                "UNIX & Linux Shell Scripting",
+                "Angular 17+ & React Frontend Architecture",
+                "iOS (Swift) & Android Native Apps",
+                "React Native Cross-Platform Apps",
+                "Oracle APEX Enterprise Applications"
+            ]
+        },
+        {
+            "title": "AI, GENAI & DATA SCIENCE",
+            "accent": (167, 139, 250),
+            "salary": "₹9.0 - 28 LPA",
+            "courses": [
+                "Generative AI & Agentic Systems",
+                "LLMs, LangChain, LlamaIndex & Vector DBs",
+                "Enterprise RAG Pipelines & Fine-Tuning",
+                "Artificial Intelligence & Neural Nets",
+                "Machine Learning with Python",
+                "Data Science with Python & R",
+                "Natural Language Processing (NLP)",
+                "Computer Vision & Edge AI",
+                "Prompt Engineering for Developers",
+                "MLOps (Kubeflow, MLflow, Docker)",
+                "TensorFlow & PyTorch Enterprise Lab",
+                "Forward Deployed AI Engineering"
+            ]
+        },
+        {
+            "title": "CLOUD, DEVOPS & INFRA",
+            "accent": (52, 211, 153),
+            "salary": "₹8.0 - 22 LPA",
+            "courses": [
+                "DevOps Master (Docker, K8s, Terraform)",
+                "AWS Certified Solutions Architect",
+                "Microsoft Azure Cloud Administrator",
+                "Google Cloud Platform (GCP) Eng",
+                "Kubernetes Administration (CKA/CKAD)",
+                "CI/CD Pipeline Automation (Jenkins)",
+                "Infrastructure as Code (Terraform)",
+                "RedHat Linux Administration (RHCSA)",
+                "Site Reliability Engineering (SRE)",
+                "DevSecOps & Cloud Security",
+                "VMware vSphere & Hybrid Cloud",
+                "OpenShift Enterprise Platform"
+            ]
+        },
+        {
+            "title": "SOFTWARE TESTING & SDET",
+            "accent": (251, 146, 60),
+            "salary": "₹6.0 - 16.5 LPA",
+            "courses": [
+                "Playwright Next-Gen Web Automation",
+                "Selenium WebDriver (Java & Python)",
+                "Full SDET Automation Architect",
+                "REST Assured & Postman API Testing",
+                "Mobile Automation with Appium",
+                "Cucumber BDD & TestNG Frameworks",
+                "Performance Testing with JMeter",
+                "Tricentis Tosca Automation Suite",
+                "Manual Testing & ISTQB Prep",
+                "AI-Augmented QA & Autonomous Tests",
+                "Cypress Modern Web Test Suite",
+                "Security Testing with OWASP ZAP"
+            ]
+        },
+        {
+            "title": "DATA ENG & BUSINESS INTEL",
+            "accent": (244, 114, 182),
+            "salary": "₹7.5 - 20 LPA",
+            "courses": [
+                "Data Engineering (PySpark, Databricks)",
+                "Microsoft Power BI Masterclass (DAX)",
+                "Tableau Desktop & Server Analyst",
+                "Snowflake Cloud Data Warehouse",
+                "SQL Server & Oracle Advanced PL/SQL",
+                "Big Data Hadoop, Hive & Kafka Streaming",
+                "Database Administration (DBA Master)",
+                "ETL Pipelines with Informatica",
+                "Business Analysis (CBAP / Agile BA)",
+                "Alteryx Data Analytics & Prep",
+                "Google Looker Data Engineering",
+                "Advanced Excel & Financial Modeling"
+            ]
+        },
+        {
+            "title": "CYBER, ENTERPRISE & CREATIVE",
+            "accent": (250, 204, 21),
+            "salary": "₹7.0 - 25 LPA",
+            "courses": [
+                "Ethical Hacking & Penetration Testing",
+                "SOC Analyst & Cyber Threat Hunting",
+                "Salesforce Admin & Apex/LWC Developer",
+                "SAP S/4HANA (FICO, MM, SD, ABAP)",
+                "Oracle Fusion Cloud Financials",
+                "UiPath & Automation Anywhere RPA",
+                "UI/UX Design (Figma & Design Systems)",
+                "Embedded Systems, IoT & Automotive CAN",
+                "Digital Marketing & Growth Hacking",
+                "Microsoft Power Apps & Power Automate",
+                "Foreign Languages (German, French, Jap)",
+                "Madurai & London Training Programs"
+            ]
+        }
+    ]
+
+    col_count = len(categories)
+    usable_w = screen_w - 36
+    col_w = (usable_w - (col_count - 1) * 12) // col_count
+    content_top = screen_top + header_bar_h + 12
+
+    for i, cat in enumerate(categories):
+        cx = margin_x + 18 + i * (col_w + 12)
+        cy = content_top
+        card_h = screen_bottom - content_top - 18
+
+        # Column background card
+        draw.rounded_rectangle([cx, cy, cx + col_w, cy + card_h], radius=8, fill=(12, 22, 27), outline=(22, 38, 46), width=1)
+
+        # Card Header
+        h_h = 50
+        draw.rounded_rectangle([cx, cy, cx + col_w, cy + h_h], radius=8, fill=(16, 30, 36))
+        draw.line([(cx + 6, cy + h_h), (cx + col_w - 6, cy + h_h)], fill=cat["accent"], width=2)
+        
+        draw.text((cx + 10, cy + 8), cat["title"], fill=cat["accent"], font=font_col_title)
+        draw.text((cx + 10, cy + 28), f"Avg: {cat['salary']}", fill=(185, 215, 220), font=font_salary)
+
+        # Course items
+        list_y = cy + h_h + 8
+        item_h = 24
+        for c_idx, c_name in enumerate(cat["courses"]):
+            if list_y + item_h > cy + card_h - 6:
+                break
+            if c_idx % 2 == 1:
+                draw.rectangle([cx + 2, list_y - 1, cx + col_w - 2, list_y + item_h - 2], fill=(10, 18, 22))
+            
+            # Bullet dot in accent color
+            draw.ellipse([cx + 8, list_y + 8, cx + 13, list_y + 13], fill=cat["accent"])
+            draw.text((cx + 20, list_y + 2), c_name, fill=(225, 240, 245), font=font_course)
+            list_y += item_h + 2
+
+    # 3. FLOOR REFLECTION OF THE BIG SCREEN
+    refl_h = int(H * 0.22)
+    refl_crop = base.crop((margin_x, screen_bottom - 240, margin_x + screen_w, screen_bottom))
+    refl_crop = refl_crop.transpose(Image.FLIP_TOP_BOTTOM)
+    refl_crop = refl_crop.resize((screen_w, refl_h), Image.Resampling.BILINEAR)
+    refl_crop = refl_crop.filter(ImageFilter.GaussianBlur(9))
+
+    alpha_mask = Image.new('L', (screen_w, refl_h))
+    for ry in range(refl_h):
+        val = int(105 * (1 - ry / refl_h))
+        alpha_mask.paste(val, (0, ry, screen_w, ry + 1))
+    
+    base.paste(refl_crop, (margin_x, screen_bottom + 6), alpha_mask)
+
+    # 4. PHOTOREALISTIC STUDENT STANDING IN FRONT OF THE BIG SCREEN
+    # Position: center-left (x ~ 1120), standing on the reflective floor looking up at the courses
+    # We composite the real photographic student cropped from story_1_tech_evolution.jpg
+    orig_man = Image.open('src/assets/carousel/story_1_tech_evolution.jpg')
+    # Crop the young engineer
+    crop_student = orig_man.crop((835, 315, 1025, 768)) # w=190, h=453
+    
+    # Scale student to majestic proportion: 540px height
+    target_h = 560
+    target_w = int(190 * (target_h / 453))
+    student_scaled = crop_student.resize((target_w, target_h), Image.Resampling.LANCZOS).convert('RGBA')
+
+    # Create feathered alpha mask for clean seamless integration
+    mask = Image.new('L', (target_w, target_h), 0)
+    m_draw = ImageDraw.Draw(mask)
+    # Contour polygon matching the student's silhouette
+    sw, sh = target_w, target_h
+    # Adjusted coordinates
+    poly = [
+        (int(sw*0.35), int(sh*0.02)), (int(sw*0.62), int(sh*0.02)),
+        (int(sw*0.75), int(sh*0.10)), (int(sw*0.82), int(sh*0.18)),
+        (int(sw*0.92), int(sh*0.28)), (int(sw*0.88), int(sh*0.48)),
+        (int(sw*0.78), int(sh*0.58)), (int(sw*0.72), int(sh*0.72)),
+        (int(sw*0.68), int(sh*0.98)), (int(sw*0.32), int(sh*0.98)),
+        (int(sw*0.25), int(sh*0.75)), (int(sw*0.22), int(sh*0.55)),
+        (int(sw*0.10), int(sh*0.48)), (int(sw*0.08), int(sh*0.28)),
+        (int(sw*0.20), int(sh*0.16)), (int(sw*0.35), int(sh*0.02))
+    ]
+    m_draw.polygon(poly, fill=255)
+    mask = mask.filter(ImageFilter.GaussianBlur(5))
+    student_scaled.putalpha(mask)
+
+    # Student placement on canvas
+    student_x = int(W * 0.44)
+    student_y = floor_y - 120
+
+    # Floor shadow under student
+    shadow_layer = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    sh_draw = ImageDraw.Draw(shadow_layer)
+    sh_draw.ellipse([student_x - 120, student_y + target_h - 35, student_x + target_w + 120, student_y + target_h + 35], fill=(0, 0, 0, 220))
+    sh_draw.ellipse([student_x - 50, student_y + target_h - 20, student_x + target_w + 50, student_y + target_h + 20], fill=(0, 0, 0, 255))
+    base = Image.alpha_composite(base.convert('RGBA'), shadow_layer).convert('RGB')
+
+    # Paste student
+    base.paste(student_scaled, (student_x, student_y), student_scaled)
+
+    # Screen light bounce rim onto student
+    rim_layer = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    r_draw = ImageDraw.Draw(rim_layer)
+    # Bright emerald & cyan edge glows along the student's shoulders and head
+    head_cx = student_x + int(sw * 0.5)
+    head_cy = student_y + int(sh * 0.08)
+    r_draw.arc([head_cx - 45, head_cy - 45, head_cx + 45, head_cy + 45], 180, 360, fill=(134, 195, 124, 200), width=3)
+    r_draw.line([(student_x + int(sw*0.25), student_y + int(sh*0.16)), (student_x + int(sw*0.10), student_y + int(sh*0.35))], fill=(52, 211, 153, 180), width=3)
+    r_draw.line([(student_x + int(sw*0.75), student_y + int(sh*0.16)), (student_x + int(sw*0.90), student_y + int(sh*0.35))], fill=(56, 189, 248, 180), width=3)
+    base = Image.alpha_composite(base.convert('RGBA'), rim_layer).convert('RGB')
+
+    # Save master image
+    out_path = r"c:\Users\muthu\Downloads\greenstech\src\assets\courses\greens_courses_big_screen.jpg"
+    base.save(out_path, format="JPEG", quality=96)
+    print(f"Master Big Screen with Real Student created successfully at: {out_path} ({W}x{H})")
+
+if __name__ == "__main__":
+    generate_elite_hero_image()

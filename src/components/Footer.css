@@ -1,0 +1,11 @@
+/* Footer Styles & Micro-Animations */
+
+footer a {
+  text-decoration: none;
+}
+
+/* Custom scrollbar or selection within footer if needed */
+footer ::selection {
+  background: rgba(16, 185, 129, 0.3);
+  color: #ffffff;
+}

@@ -1,0 +1,151 @@
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 1000;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: rgba(223, 233, 225, 0.96);
+  color: #2a3f40;
+  box-shadow: 0 2px 20px rgba(36, 63, 64, 0.12);
+  backdrop-filter: blur(10px);
+}
+
+.navbar-brand {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 1rem 0 1.5rem;
+}
+
+.navbar-logo {
+  height: 56px;
+  width: auto;
+}
+
+.navbar-toggle {
+  display: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  margin-left: auto;
+}
+
+.navbar-toggle span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  margin-bottom: 5px;
+  background: #2a3f40;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.navbar-toggle.open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.navbar-toggle.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.navbar-toggle.open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+.navbar-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0.25rem 0;
+  max-width: 100%;
+}
+
+.navbar-links::-webkit-scrollbar {
+  height: 6px;
+}
+
+.navbar-links::-webkit-scrollbar-thumb {
+  background: rgba(42, 63, 64, 0.3);
+  border-radius: 999px;
+}
+
+.nav-link {
+  color: #2a3f40;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  font-weight: 700;
+  transition: color 0.2s ease;
+  white-space: normal;
+}
+
+.nav-link:hover {
+  color: #d6a00d;
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0.75rem 1rem;
+  }
+
+  .navbar-brand {
+    padding-left: 1rem;
+    padding-right: 0.75rem;
+  }
+
+  .navbar-logo {
+    height: 48px;
+  }
+
+  .navbar-toggle {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .navbar-links {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: #dfe9e1;
+    border-top: 1px solid rgba(42, 63, 64, 0.1);
+    max-height: calc(100vh - 75px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .navbar-links.open {
+    display: flex;
+  }
+
+  .nav-link {
+    font-size: 0.95rem;
+    white-space: normal;
+  }
+}
+
+@media (max-width: 520px) {
+  .navbar {
+    padding: 0.75rem 0.75rem;
+  }
+
+  .navbar-logo {
+    height: 44px;
+  }
+
+  .navbar-links {
+    padding: 0.75rem 0.75rem;
+  }
+
+  .nav-link {
+    font-size: 0.86rem;
+  }
+}
